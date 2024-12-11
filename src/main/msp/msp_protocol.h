@@ -350,3 +350,10 @@
 #define MSP_RTC                  247    //out message         Gets the RTC clock
 #define MSP_SET_BOARD_INFO       248    //in message          Sets the board information for this board
 #define MSP_SET_SIGNATURE        249    //in message          Sets the signature of the board and serial number
+
+// For Askari Betaflight
+#define MSP_ASKARI                                                             \
+  255 // in message          Sets the state of the pid controller -> angular
+      // velocities of each axis and thrust and expectes Sends back IMU data,
+      // attitude data, motor speed data. All data needed for state estimation
+      // in a higher level controller (Jetson or pi)
