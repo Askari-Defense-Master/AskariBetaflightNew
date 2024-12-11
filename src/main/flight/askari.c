@@ -23,6 +23,36 @@
 
 #ifdef ASKARI_MODE
 
+enum AXIS { // roll, pitch, throttle, yaw, aux1, aux2
+  ROLL = 0,
+  PITCH,
+  THROTTLE,
+  YAW,
+  AUX1,
+  AUX2
+};
+
+
+int16_t askariSetpoints[2] = {0,0}; //This holds roll [Decidegrees],pitch [Decidegrees], and maybe yaw [Degrees/s] commands
+
+
+static void askariMspFrameReceive(const uint16_t *frame, int channelCount)
+{
+  uint16_t rxFrame[channelCount];
+  for (int i = 0; i<channelCount;i++)
+  {
+    if (i == ROLL || i == PITCH)
+    {
+      rxFrame[i] = 1500; //To ensure that the system does to RX failsage
+      askariSetpoints[i]  = (int16_t)frame[i]; // Reinterpret as int16_t
+    }else 
+    {
+      rxFrame[i] = frame[i];
+    }
+  }
+  rxMspFrameReceive(rxFrame, channelCount); //to set aux1,aux2,throttle and yaw
+}
+
 mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
                                     sbuf_t *src, sbuf_t *dst) {
   UNUSED(srcDesc);
@@ -31,7 +61,6 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
   //---
   switch (cmdMSP) {
   case MSP_ASKARI: {
-
     //Handle the RX receive
     uint8_t channelCount = dataSize / sizeof(uint16_t);
     if (channelCount > SUPPORTED_STATE_CHANNEL_COUNT) {
@@ -41,7 +70,8 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
       for (int i = 0; i < channelCount; i++) {
         frame[i] = sbufReadU16(src);
       }
-      rxMspFrameReceive(frame, channelCount);
+      // rxMspFrameReceive(frame, channelCount);
+      askariMspFrameReceive(frame, channelCount);
     }
 
     // SENDING BACK ATTITUDE DATA
