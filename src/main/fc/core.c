@@ -1030,7 +1030,8 @@ void processRxModes(timeUs_t currentTimeUs)
         if (!FLIGHT_MODE(ANGLE_MODE)) {
             ENABLE_FLIGHT_MODE(ANGLE_MODE);
         }
-        if (!FLIGHT_MODE(ASKARI_MODE)) {
+        if (IS_RC_MODE_ACTIVE(BOXANGLE) && !FLIGHT_MODE(ASKARI_MODE)) //Do not want to activate askari on only angle mode
+        {
             ENABLE_FLIGHT_MODE(ASKARI_MODE);
         }
     } else {
