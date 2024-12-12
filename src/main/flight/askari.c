@@ -30,8 +30,7 @@ enum AXIS { // roll, pitch, throttle, yaw, aux1, aux2
   AUX2
 };
 
-
-int16_t askariSetpoints[2] = {0,0}; //This holds roll [Decidegrees],pitch [Decidegrees], and maybe yaw [Degrees/s] commands
+int16_t askariSetpoints[3] = {0,0,0}; //This holds roll [Decidegrees],pitch [Decidegrees], and maybe yaw [Degrees/s] commands
 bool useAskari = false;
 
 static void askariMspFrameReceive(const uint16_t *frame, int channelCount)
