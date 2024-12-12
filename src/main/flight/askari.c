@@ -1,7 +1,6 @@
 #include "askari.h"
 
 #include <math.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -21,7 +20,6 @@
 #include "rx/rx.h"
 #include "rx/msp.h"
 
-#ifdef ASKARI_MODE
 
 enum AXIS { // roll, pitch, throttle, yaw, aux1, aux2
   ROLL = 0,
@@ -34,7 +32,7 @@ enum AXIS { // roll, pitch, throttle, yaw, aux1, aux2
 
 
 int16_t askariSetpoints[2] = {0,0}; //This holds roll [Decidegrees],pitch [Decidegrees], and maybe yaw [Degrees/s] commands
-
+bool useAskari = false;
 
 static void askariMspFrameReceive(const uint16_t *frame, int channelCount)
 {
@@ -107,5 +105,3 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
   }
   return MSP_RESULT_ACK;
 }
-
-#endif

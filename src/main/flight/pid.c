@@ -46,6 +46,7 @@
 #include "fc/rc_controls.h"
 #include "fc/runtime_config.h"
 
+#include "flight/askari.h"
 #include "flight/autopilot.h"
 #include "flight/gps_rescue.h"
 #include "flight/imu.h"
@@ -583,7 +584,15 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
     }
 #endif
 
-    angleTarget = constrainf(angleTarget, -angleLimit, angleLimit);
+    if (useAskari) {
+        // Set the angle target based on Askari setpoints in Askari mode
+        angleTarget = askariSetpoints[axis] / 10.0f; // Explicit float division
+    }else{
+        // Constrain the angle target within the specified limits in angle mode
+        angleTarget = constrainf(angleTarget, -angleLimit, angleLimit);
+    }
+    
+    
 
     const float currentAngle = (attitude.raw[axis] - angleTrim->raw[axis]) / 10.0f; // stepped at 500hz with some 4ms flat spots
     const float errorAngle = angleTarget - currentAngle;
