@@ -33,22 +33,22 @@ enum AXIS { // roll, pitch, throttle, yaw, aux1, aux2
 int16_t askariSetpoints[3] = {0,0,0}; //This holds roll [Decidegrees],pitch [Decidegrees], and maybe yaw [Degrees/s] commands
 bool useAskari = false;
 
-static void askariMspFrameReceive(const uint16_t *frame, int channelCount)
-{
-  uint16_t rxFrame[channelCount];
-  for (int i = 0; i<channelCount;i++)
-  {
-    if (i == ROLL || i == PITCH)
-    {
-      rxFrame[i] = 1500; //To ensure that the system does to RX failsage
-      askariSetpoints[i]  = (int16_t)frame[i]; // Reinterpret as int16_t
-    }else 
-    {
-      rxFrame[i] = frame[i];
-    }
-  }
-  rxMspFrameReceive(rxFrame, channelCount); //to set aux1,aux2,throttle and yaw
-}
+// static void askariMspFrameReceive(const uint16_t *frame, int channelCount)
+// {
+//   uint16_t rxFrame[channelCount];
+//   for (int i = 0; i<channelCount;i++)
+//   {
+//     if (i == ROLL || i == PITCH)
+//     {
+//       rxFrame[i] = 1500; //To ensure that the system does to RX failsage
+//       askariSetpoints[i]  = (int16_t)frame[i]; // Reinterpret as int16_t
+//     }else 
+//     {
+//       rxFrame[i] = frame[i];
+//     }
+//   }
+//   rxMspFrameReceive(rxFrame, channelCount); //to set aux1,aux2,throttle and yaw
+// }
 
 mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
                                     sbuf_t *src, sbuf_t *dst) {
@@ -68,13 +68,16 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
         frame[i] = sbufReadU16(src);
       }
       // rxMspFrameReceive(frame, channelCount);
-      askariMspFrameReceive(frame, channelCount);
+      // askariMspFrameReceive(frame, channelCount);
+
+      rxMspFrameReceive(frame, channelCount); //to set aux1,aux2,throttle and yaw
+
     }
 
     // SENDING BACK ATTITUDE DATA
     sbufWriteU16(dst, attitude.values.roll);
     sbufWriteU16(dst, attitude.values.pitch);
-    sbufWriteU16(dst, DECIDEGREES_TO_DEGREES(attitude.values.yaw));
+    sbufWriteU16(dst, attitude.values.yaw);
 
     // SENDING BACK IMU DATA
     for (int i = 0; i < 3; i++) {
