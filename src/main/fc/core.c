@@ -59,6 +59,7 @@
 #include "fc/runtime_config.h"
 #include "fc/stats.h"
 
+#include "flight/askari.h"
 #include "flight/failsafe.h"
 #include "flight/gps_rescue.h"
 #include "flight/alt_hold.h"
@@ -247,7 +248,8 @@ static bool accNeedsCalibration(void)
             isModeActivationConditionPresent(BOXGPSRESCUE) ||
             isModeActivationConditionPresent(BOXCAMSTAB) ||
             isModeActivationConditionPresent(BOXCALIB) ||
-            isModeActivationConditionPresent(BOXACROTRAINER)) {
+            isModeActivationConditionPresent(BOXACROTRAINER) ||
+            isModeActivationConditionPresent(BOXASKARI)) {
 
             return true;
         }
@@ -1015,7 +1017,7 @@ void processRxModes(timeUs_t currentTimeUs)
 
     bool canUseHorizonMode = true;
     if ((IS_RC_MODE_ACTIVE(BOXANGLE)
-        || failsafeIsActive()
+        || failsafeIsActive() || IS_RC_MODE_ACTIVE(BOXASKARI)
 #ifdef USE_ALTITUDE_HOLD
         || FLIGHT_MODE(ALT_HOLD_MODE)
 #endif
@@ -1028,6 +1030,10 @@ void processRxModes(timeUs_t currentTimeUs)
 
         if (!FLIGHT_MODE(ANGLE_MODE)) {
             ENABLE_FLIGHT_MODE(ANGLE_MODE);
+        }
+        if (IS_RC_MODE_ACTIVE(BOXASKARI))
+        {
+            useAskari = true;
         }
     } else {
         DISABLE_FLIGHT_MODE(ANGLE_MODE); // failsafe support
