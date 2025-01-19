@@ -12,8 +12,10 @@
 #include "msp/msp_protocol.h"
 
 #include "flight/imu.h"
+#include "flight/position.h"
 
 #include "sensors/acceleration.h"
+#include "sensors/barometer.h"
 #include "sensors/compass.h"
 #include "sensors/gyro.h"
 #include "sensors/gyro_init.h"
@@ -105,13 +107,12 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
     }
 
     // SENDING BACK ALTITUDE DATA
-    // *TODO:
-//     sbufWriteU32(dst, getEstimatedAltitudeCm());
-// #ifdef USE_VARIO
-//         sbufWriteU16(dst, getEstimatedVario());
-// #else
-//         sbufWriteU16(dst, 0);
-// #endif
+    sbufWriteU32(dst, getEstimatedAltitudeCm());
+#ifdef USE_VARIO
+        sbufWriteU16(dst, getEstimatedVario());
+#else
+        sbufWriteU16(dst, 0);
+#endif
 
     // SENDING BACK MOTOR DATA
     /*TODO:*/
