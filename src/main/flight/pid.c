@@ -591,12 +591,14 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
         // Constrain the angle target within the specified limits in angle mode
         angleTarget = constrainf(angleTarget, -angleLimit, angleLimit);
     }
+
+    const float gyroRate = gyro.gyroADCf[axis];
     
     
 
     const float currentAngle = (attitude.raw[axis] - angleTrim->raw[axis]) / 10.0f; // stepped at 500hz with some 4ms flat spots
     const float errorAngle = angleTarget - currentAngle;
-    float angleRate = errorAngle * pidRuntime.angleGain + angleFeedforward;
+    float angleRate = errorAngle * pidRuntime.angleGain - gyroRate * pidAskari.derivateGains[axis] + angleFeedforward;
 
     // minimise cross-axis wobble due to faster yaw responses than roll or pitch, and make co-ordinated yaw turns
     // by compensating for the effect of yaw on roll while pitched, and on pitch while rolled

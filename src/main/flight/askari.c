@@ -34,23 +34,34 @@ enum AXIS { // roll, pitch, throttle, yaw, aux1, aux2
 };
 
 int16_t askariSetpoints[3] = {0,0,0}; //This holds roll [Decidegrees],pitch [Decidegrees], and maybe yaw [Degrees/s] commands
+
+pidAskari_t pidAskari = {
+    .derivateGains = {0.2, 0.2},
+    .integralGains = {0.5, 0.5}
+};
+
 bool useAskari = false;
 
-static void askariMspFrameReceive(const uint16_t *frame, int channelCount)
+static void askariMspFrameReceive(uint16_t *frame, int channelCount)
 {
-  uint16_t rxFrame[channelCount];
   for (int i = 0; i<channelCount;i++)
   {
     if (i == ROLL || i == PITCH)
     {
-      rxFrame[i] = 1500; //To ensure that the system does to RX failsage
-      askariSetpoints[i]  = (int16_t)frame[i]; // Reinterpret as int16_t
-    }else 
-    {
-      rxFrame[i] = frame[i];
+       //To ensure that the system does to RX failsage
+      // if (i == YAW)
+      //   askariSetpoints[i-1]  = (int16_t)frame[i]; // Reinterpret as int16_t
+      // else
+      //   askariSetpoints[i]  = (int16_t)frame[i]; // Reinterpret as int16_t
+      if (i == ROLL || i == PITCH)
+      {
+          askariSetpoints[i] = (int16_t)frame[i];
+      }
+      frame[i] = 1500;
+        
+        // askariSetpoints[i] = frame[i];
     }
   }
-  rxMspFrameReceive(rxFrame, channelCount); //to set aux1,aux2,throttle and yaw
 }
 
 mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
@@ -74,10 +85,7 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
       {
         askariMspFrameReceive(frame, channelCount);
       } 
-      else
-      {
         rxMspFrameReceive(frame, channelCount); //to set aux1,aux2,throttle and yaw
-      }
     }
 
     // SENDING BACK ATTITUDE DATA
