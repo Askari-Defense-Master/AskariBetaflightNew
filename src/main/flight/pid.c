@@ -584,16 +584,9 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
     }
 #endif
 
-    if (useAskari) {
-        // Set the angle target based on Askari setpoints in Askari mode
-        angleTarget = askariSetpoints[axis] / 10.0f; // Explicit float division
-    }else{
-        // Constrain the angle target within the specified limits in angle mode
-        angleTarget = constrainf(angleTarget, -angleLimit, angleLimit);
-    }
+    // Constrain the angle target within the specified limits in angle mode
+    angleTarget = constrainf(angleTarget, -angleLimit, angleLimit);
     
-    
-
     const float currentAngle = (attitude.raw[axis] - angleTrim->raw[axis]) / 10.0f; // stepped at 500hz with some 4ms flat spots
     const float errorAngle = angleTarget - currentAngle;
     float angleRate = errorAngle * pidRuntime.angleGain + angleFeedforward;
@@ -890,7 +883,7 @@ STATIC_UNIT_TESTED void applyItermRelax(const int axis, const float iterm,
     if (pidRuntime.itermRelax) {
         if (axis < FD_YAW || pidRuntime.itermRelax == ITERM_RELAX_RPY || pidRuntime.itermRelax == ITERM_RELAX_RPY_INC) {
             float itermRelaxThreshold = ITERM_RELAX_SETPOINT_THRESHOLD;
-            if (FLIGHT_MODE(ANGLE_MODE)) {
+            if (FLIGHT_MODE(ANGLE_MODE | ASKARI_MODE)) {
                 itermRelaxThreshold *= 0.2f;
             }
             const float itermRelaxFactor = MAX(0, 1 - setpointHpf / itermRelaxThreshold);
@@ -1209,6 +1202,12 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
         disarmOnImpact();
     }
 
+    // NOTE: Update quaternions for Askari mode to use in controller
+    if (FLIGHT_MODE(ASKARI_MODE))
+    {
+        updateAskariQuaternions();
+    }
+
     // ----------PID controller----------
     for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
 
@@ -1240,6 +1239,13 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
                     DEBUG_SET(DEBUG_ANGLE_TARGET, 2, currentPidSetpoint); // yaw setpoint after attenuation
                 }
             }
+        }
+
+        //NOTE: Askari controller
+        if (FLIGHT_MODE(ASKARI_MODE))
+        {
+            currentPidSetpoint = pidLevelAskari(axis);
+            currentPidSetpoint = pt3FilterApply(&pidRuntime.askariFilter[axis], currentPidSetpoint);
         }
 #endif
 
@@ -1338,7 +1344,7 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
         float pidSetpointDelta = 0;
 
 #ifdef USE_FEEDFORWARD
-        if (FLIGHT_MODE(ANGLE_MODE) && pidRuntime.axisInAngleMode[axis]) {
+        if ((FLIGHT_MODE(ANGLE_MODE) && pidRuntime.axisInAngleMode[axis]) || FLIGHT_MODE(ASKARI_MODE)) {
             // this axis is fully under self-levelling control
             // it will already have stick based feedforward applied in the input to their angle setpoint
             // a simple setpoint Delta can be used to for PID feedforward element for motor lag on these axes

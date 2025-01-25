@@ -90,6 +90,7 @@ void imuSetHasNewData(uint32_t dt);
 #endif
 #endif
 
+void imuQuaternionMultiplication(quaternion_t *q1, quaternion_t *q2, quaternion_t *result);
 bool imuQuaternionHeadfreeOffsetSet(void);
 void imuQuaternionHeadfreeTransformVectorEarthToBody(vector3_t *v);
 bool shouldInitializeGPSHeading(void);

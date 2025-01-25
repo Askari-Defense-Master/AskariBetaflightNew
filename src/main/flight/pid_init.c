@@ -312,8 +312,10 @@ void pidInitFilters(const pidProfile_t *pidProfile)
 
     for (int axis = 0; axis < 2; axis++) {  // ROLL and PITCH only
         pt3FilterInit(&pidRuntime.attitudeFilter[axis], k);
+        pt3FilterInit(&pidRuntime.askariFilter[axis], k);
         pt3FilterInit(&pidRuntime.angleFeedforwardPt3[axis], k2);
     }
+    pt3FilterInit(&pidRuntime.askariFilter[2], k);
     pidRuntime.angleYawSetpoint = 0.0f;
 #endif
 

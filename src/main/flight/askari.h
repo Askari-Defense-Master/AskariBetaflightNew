@@ -12,7 +12,14 @@ extern bool useAskari;
 
 typedef int mspDescriptor_t;
 
+typedef struct
+{   
+    float pGains[3];
+    float dGains[3];
+} askariGains_t;
+
 mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP, sbuf_t *src,sbuf_t *dst);
 
-float getAskariSetpointRates(int axis);
 
+void updateAskariQuaternions(void);
+float pidLevelAskari(int axis);

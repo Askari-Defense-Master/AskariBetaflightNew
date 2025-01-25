@@ -751,7 +751,7 @@ void imuUpdateAttitude(timeUs_t currentTimeUs)
         // Update the throttle correction for angle and supply it to the mixer
         int throttleAngleCorrection = 0;
         if (throttleAngleValue
-            && (FLIGHT_MODE(ANGLE_MODE | HORIZON_MODE))
+            && (FLIGHT_MODE(ANGLE_MODE | HORIZON_MODE | ASKARI_MODE))
             && ARMING_FLAG(ARMED)) {
             throttleAngleCorrection = calculateThrottleAngleCorrection();
         }

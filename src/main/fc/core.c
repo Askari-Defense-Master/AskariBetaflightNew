@@ -1017,7 +1017,7 @@ void processRxModes(timeUs_t currentTimeUs)
 
     bool canUseHorizonMode = true;
     if ((IS_RC_MODE_ACTIVE(BOXANGLE)
-        || failsafeIsActive() || IS_RC_MODE_ACTIVE(BOXASKARI)
+        || failsafeIsActive()
 #ifdef USE_ALTITUDE_HOLD
         || FLIGHT_MODE(ALT_HOLD_MODE)
 #endif
@@ -1031,12 +1031,20 @@ void processRxModes(timeUs_t currentTimeUs)
         if (!FLIGHT_MODE(ANGLE_MODE)) {
             ENABLE_FLIGHT_MODE(ANGLE_MODE);
         }
-        if (IS_RC_MODE_ACTIVE(BOXASKARI))
-        {
-            useAskari = true;
-        }
     } else {
         DISABLE_FLIGHT_MODE(ANGLE_MODE); // failsafe support
+    }
+
+    if (IS_RC_MODE_ACTIVE(BOXASKARI) && (sensors(SENSOR_ACC)))
+    {
+        useAskari = true;
+        if (!FLIGHT_MODE(ASKARI_MODE)) {
+            ENABLE_FLIGHT_MODE(ASKARI_MODE);
+        }
+    }
+    else
+    {
+        DISABLE_FLIGHT_MODE(ASKARI_MODE);
     }
 
 #ifdef USE_ALTITUDE_HOLD
@@ -1098,7 +1106,7 @@ void processRxModes(timeUs_t currentTimeUs)
     }
 #endif
 
-    if (FLIGHT_MODE(ANGLE_MODE | ALT_HOLD_MODE | POS_HOLD_MODE | HORIZON_MODE)) {
+    if (FLIGHT_MODE(ANGLE_MODE | ALT_HOLD_MODE | POS_HOLD_MODE | HORIZON_MODE | ASKARI_MODE)) {
         LED1_ON;
         // increase frequency of attitude task to reduce drift when in angle or horizon mode
         rescheduleTask(TASK_ATTITUDE, TASK_PERIOD_HZ(acc.sampleRateHz / (float)imuConfig()->imu_process_denom));
