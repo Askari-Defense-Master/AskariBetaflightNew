@@ -63,6 +63,10 @@ askariGains_t pidAskari = {
 int16_t askariSetpoints[3] = {0,0,0}; //This holds roll [Decidegrees],pitch [Decidegrees], and maybe yaw [Degrees/s] commands
 bool useAskari = false;
 
+static float invSqrt(float x)
+{
+    return 1.0f / sqrtf(x);
+}
 
 //Askari packet: {quaternion.w,quaternion.x,quaternion.y,quaternion.z,throttle,aux1,aux2}
 static void askariMspFrameReceive(const uint16_t *frame, int channelCount)
@@ -81,13 +85,20 @@ static void askariMspFrameReceive(const uint16_t *frame, int channelCount)
       desiredQuaternion.v[i] = (int16_t)frame[i] / 1000.0f;
   }
 
-  // Map relevant channels from frame to rxFrame using the mapping
+  //normalize the quaternion
+  float recipNorm = invSqrt(sq(desiredQuaternion.w) + sq(desiredQuaternion.x) + sq(desiredQuaternion.y) + sq(desiredQuaternion.z));
+  desiredQuaternion.w *= recipNorm;
+  desiredQuaternion.x *= recipNorm;
+  desiredQuaternion.y *= recipNorm;
+  desiredQuaternion.z *= recipNorm;
+
+  // Map relevant channels from frame to rxFrame
   rxFrame[RX_THROTTLE] = frame[THROTTLE];
   rxFrame[RX_AUX1] = frame[AUX1];
   rxFrame[RX_AUX2] = frame[AUX2];
 
-    // Send the mapped RX frame
-    rxMspFrameReceive(rxFrame, RX_CHANNEL_COUNT);
+  // Send the mapped RX frame
+  rxMspFrameReceive(rxFrame, RX_CHANNEL_COUNT);
 }
 
 mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
@@ -215,8 +226,7 @@ FAST_CODE_NOINLINE void updateAskariQuaternions(void)
   imuQuaternionMultiplication(&currentQuaternion, &desiredQuaternion, &errorQuaternion);
   imuQuaternionComputeProducts(&errorQuaternion, &errorQuaternionP); // I only need 6 of the 9 products might be able to save some cycles if I only compute the ones I need
 
-  float den = sqrtf(errorQuaternionP.ww + errorQuaternionP.zz);
-  float inv_den = 1.0f / den;
+  float inv_den = invSqrt(errorQuaternionP.ww + errorQuaternionP.zz);
 
   errorTiltQuaternion.w = (errorQuaternionP.ww + errorQuaternionP.zz)*inv_den;
   errorTiltQuaternion.x = (errorQuaternionP.wx - errorQuaternionP.yz)*inv_den;
