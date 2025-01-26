@@ -56,12 +56,9 @@ quaternionProducts errorQuaternionP = QUATERNION_PRODUCTS_INITIALIZE;
 
 //NOTE: Integral will probably not be used
 askariGains_t pidAskari = {
-  .pGains = {12.0,12.0,5.0},
+  .pGains = {300.0,300.0,300.0},
   .dGains = {0.3,0.3,0.3} 
 };
-
-int16_t askariSetpoints[3] = {0,0,0}; //This holds roll [Decidegrees],pitch [Decidegrees], and maybe yaw [Degrees/s] commands
-bool useAskari = false;
 
 static float invSqrt(float x)
 {
@@ -69,20 +66,14 @@ static float invSqrt(float x)
 }
 
 //Askari packet: {quaternion.w,quaternion.x,quaternion.y,quaternion.z,throttle,aux1,aux2}
-static void askariMspFrameReceive(const uint16_t *frame, int channelCount)
+static void askariMspFrameReceive(const uint16_t *frame)
 {
   //Frame to be sent back to the RX side
-  uint16_t rxFrame[RX_CHANNEL_COUNT] = {1500}; 
-
-  if (channelCount != PACKET_SIZE) {
-    // Handle case where channel count doesn't match expected packet size
-    rxMspFrameReceive(rxFrame, RX_CHANNEL_COUNT); // Send default frame
-    return;
-  }
+  uint16_t rxFrame[RX_CHANNEL_COUNT] = {1500, 1500, 1500, 1500, 1500, 1500}; 
 
   // Convert quaternion elements
   for (int i = QUATERNION_W; i <= QUATERNION_Z; i++) {
-      desiredQuaternion.v[i] = (int16_t)frame[i] / 1000.0f;
+      desiredQuaternion.v[i] = (float)((int16_t)frame[i]);
   }
 
   //normalize the quaternion
@@ -110,28 +101,16 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
   switch (cmdMSP) {
   case MSP_ASKARI: {
     //Handle the RX receive
-    uint8_t channelCount = dataSize / sizeof(uint16_t);
-    if (channelCount > SUPPORTED_STATE_CHANNEL_COUNT) {
+    if (dataSize != PACKET_SIZE_BYTES) {
       return MSP_RESULT_ERROR;
-    } else {
-      uint16_t frame[SUPPORTED_STATE_CHANNEL_COUNT];
-      for (int i = 0; i < channelCount; i++) {
-        frame[i] = sbufReadU16(src);
-      }
-      if (FLIGHT_MODE(ASKARI_MODE))
-      {
-        askariMspFrameReceive(frame, channelCount);
-      } 
-      else
-      {
-        rxMspFrameReceive(frame, channelCount); //to set aux1,aux2,throttle and yaw
-      }
-    }
+    } 
 
-    // SENDING BACK ATTITUDE DATA
-    // sbufWriteU16(dst, attitude.values.roll);
-    // sbufWriteU16(dst, attitude.values.pitch);
-    // sbufWriteU16(dst, attitude.values.yaw);
+    uint8_t channelCount = dataSize / sizeof(uint16_t);
+    uint16_t frame[channelCount];
+    for (int i = 0; i < channelCount; i++) {
+      frame[i] = sbufReadU16(src);
+    }
+    askariMspFrameReceive(frame);
 
     // SENDING BACK ATTITUDE DATA in quaternions
     sbufWriteU16(dst, lrintf(imuAttitudeQuaternion.w*1000));

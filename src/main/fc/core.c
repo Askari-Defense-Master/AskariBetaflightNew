@@ -1037,7 +1037,6 @@ void processRxModes(timeUs_t currentTimeUs)
 
     if (IS_RC_MODE_ACTIVE(BOXASKARI) && (sensors(SENSOR_ACC)))
     {
-        useAskari = true;
         if (!FLIGHT_MODE(ASKARI_MODE)) {
             ENABLE_FLIGHT_MODE(ASKARI_MODE);
         }

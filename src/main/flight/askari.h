@@ -6,9 +6,7 @@
 
 // 5 Inputs states, angular velocities around each axis (ROLL,PITCH,YAW), thrust
 // command and a channel for arming
-#define SUPPORTED_STATE_CHANNEL_COUNT 6
-extern int16_t askariSetpoints[3];
-extern bool useAskari;
+#define PACKET_SIZE_BYTES 14
 
 typedef int mspDescriptor_t;
 

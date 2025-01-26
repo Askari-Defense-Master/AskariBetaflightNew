@@ -463,6 +463,8 @@ void crsfFrameFlightMode(sbuf_t *dst)
         flightMode = "POSH";
     } else if (FLIGHT_MODE(HORIZON_MODE)) {
         flightMode = "HOR";
+    } else if (FLIGHT_MODE(ASKARI_MODE)) {
+        flightMode = "ASK";
     } else if (isAirmodeEnabled()) {
         flightMode = "AIR";
     }
