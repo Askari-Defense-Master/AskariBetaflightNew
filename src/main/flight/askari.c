@@ -24,13 +24,25 @@
 #include "rx/msp.h"
 
 
-enum AXIS { // roll, pitch, throttle, yaw, aux1, aux2
-  ROLL = 0,
-  PITCH,
+enum RX_CHANNELS { // roll, pitch, throttle, yaw, aux1, aux2
+  RX_ROLL = 0,
+  RX_PITCH,
+  RX_THROTTLE,
+  RX_YAW,
+  RX_AUX1,
+  RX_AUX2,
+  RX_CHANNEL_COUNT // Total number of RX channels
+};
+
+enum ASKARI_PACKET_INDEX { // roll, pitch, throttle, yaw, aux1, aux2
+  QUATERNION_W = 0,
+  QUATERNION_X,
+  QUATERNION_Y,
+  QUATERNION_Z,
   THROTTLE,
-  YAW,
   AUX1,
-  AUX2
+  AUX2,
+  PACKET_SIZE
 };
 
 //Quaternion variables used in the controller
@@ -51,21 +63,31 @@ askariGains_t pidAskari = {
 int16_t askariSetpoints[3] = {0,0,0}; //This holds roll [Decidegrees],pitch [Decidegrees], and maybe yaw [Degrees/s] commands
 bool useAskari = false;
 
+
+//Askari packet: {quaternion.w,quaternion.x,quaternion.y,quaternion.z,throttle,aux1,aux2}
 static void askariMspFrameReceive(const uint16_t *frame, int channelCount)
 {
-  uint16_t rxFrame[channelCount];
-  for (int i = 0; i<channelCount;i++)
-  {
-    if (i == ROLL || i == PITCH)
-    {
-      rxFrame[i] = 1500; //To ensure that the system does to RX failsage
-      askariSetpoints[i]  = (int16_t)frame[i]; // Reinterpret as int16_t
-    }else 
-    {
-      rxFrame[i] = frame[i];
-    }
+  //Frame to be sent back to the RX side
+  uint16_t rxFrame[RX_CHANNEL_COUNT] = {1500}; 
+
+  if (channelCount != PACKET_SIZE) {
+    // Handle case where channel count doesn't match expected packet size
+    rxMspFrameReceive(rxFrame, RX_CHANNEL_COUNT); // Send default frame
+    return;
   }
-  rxMspFrameReceive(rxFrame, channelCount); //to set aux1,aux2,throttle and yaw
+
+  // Convert quaternion elements
+  for (int i = QUATERNION_W; i <= QUATERNION_Z; i++) {
+      desiredQuaternion.v[i] = (int16_t)frame[i] / 1000.0f;
+  }
+
+  // Map relevant channels from frame to rxFrame using the mapping
+  rxFrame[RX_THROTTLE] = frame[THROTTLE];
+  rxFrame[RX_AUX1] = frame[AUX1];
+  rxFrame[RX_AUX2] = frame[AUX2];
+
+    // Send the mapped RX frame
+    rxMspFrameReceive(rxFrame, RX_CHANNEL_COUNT);
 }
 
 mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
@@ -96,9 +118,16 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
     }
 
     // SENDING BACK ATTITUDE DATA
-    sbufWriteU16(dst, attitude.values.roll);
-    sbufWriteU16(dst, attitude.values.pitch);
-    sbufWriteU16(dst, attitude.values.yaw);
+    // sbufWriteU16(dst, attitude.values.roll);
+    // sbufWriteU16(dst, attitude.values.pitch);
+    // sbufWriteU16(dst, attitude.values.yaw);
+
+    // SENDING BACK ATTITUDE DATA in quaternions
+    sbufWriteU16(dst, lrintf(imuAttitudeQuaternion.w*1000));
+    sbufWriteU16(dst, lrintf(imuAttitudeQuaternion.x*1000));
+    sbufWriteU16(dst, lrintf(imuAttitudeQuaternion.y*1000));
+    sbufWriteU16(dst, lrintf(imuAttitudeQuaternion.z*1000));
+
 
     // SENDING BACK IMU DATA
     for (int i = 0; i < 3; i++) {
@@ -137,13 +166,12 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
     return MSP_RESULT_CMD_UNKNOWN;
   }
 
-  pidLevelAskari(ROLL);
   return MSP_RESULT_ACK;
 }
 
 
 ///THE MAGIC HAPPENS HERE
-//ASKARI ATTITUDE CONTROL
+//NOTE: ASKARI ATTITUDE CONTROL
 
 //Here are some papers that helped me out
 /*
@@ -162,16 +190,16 @@ nmichael@cmu.edu
 
 static void imuQuaternionComputeProducts(quaternion_t *quat, quaternionProducts *quatProd)
 {
-    quatProd->ww = quat->w * quat->w;
-    quatProd->wx = quat->w * quat->x;
-    quatProd->wy = quat->w * quat->y;
-    quatProd->wz = quat->w * quat->z;
-    quatProd->xx = quat->x * quat->x;
-    quatProd->xy = quat->x * quat->y;
-    quatProd->xz = quat->x * quat->z;
-    quatProd->yy = quat->y * quat->y;
-    quatProd->yz = quat->y * quat->z;
-    quatProd->zz = quat->z * quat->z;
+    quatProd->ww = quat->w * quat->w;//need
+    quatProd->wx = quat->w * quat->x;//need
+    quatProd->wy = quat->w * quat->y;//need
+    // quatProd->wz = quat->w * quat->z;
+    // quatProd->xx = quat->x * quat->x;
+    // quatProd->xy = quat->x * quat->y;
+    quatProd->xz = quat->x * quat->z;//need
+    // quatProd->yy = quat->y * quat->y;
+    quatProd->yz = quat->y * quat->z;//need
+    quatProd->zz = quat->z * quat->z;//need
 }
 
 static void quaternionConjugate(quaternion_t *q) {
@@ -185,7 +213,7 @@ FAST_CODE_NOINLINE void updateAskariQuaternions(void)
   getQuaternion(&currentQuaternion);
   quaternionConjugate(&currentQuaternion);
   imuQuaternionMultiplication(&currentQuaternion, &desiredQuaternion, &errorQuaternion);
-  imuQuaternionComputeProducts(&errorQuaternion, &errorQuaternionP); // I only need 6 of the 9 products might be able to save some cycles if I just use it myself
+  imuQuaternionComputeProducts(&errorQuaternion, &errorQuaternionP); // I only need 6 of the 9 products might be able to save some cycles if I only compute the ones I need
 
   float den = sqrtf(errorQuaternionP.ww + errorQuaternionP.zz);
   float inv_den = 1.0f / den;
@@ -207,7 +235,7 @@ FAST_CODE_NOINLINE void updateAskariQuaternions(void)
 // processing power that it should be a non-issue.
 FAST_CODE_NOINLINE float pidLevelAskari(int axis)
 {
-    //Ensure that quaternions are updated --> called from main loop
+    //NB: Ensure that quaternions are updated --> called from main loop
 
     ///PD controller
     const float gyroRate = gyro.gyroADCf[axis];
@@ -215,7 +243,7 @@ FAST_CODE_NOINLINE float pidLevelAskari(int axis)
     UNUSED(gyroRate);
     
     //pidRuntime.angleGain
-    float angleRate = pidAskari.pGains[axis] * errorTiltQuaternion.v[axis+1] + pidAskari.pGains[axis] * errorYawQuaternion.v[axis+1] - pidAskari.dGains[axis] * gyroRate;
+    float angleRate = (pidAskari.pGains[axis] * errorTiltQuaternion.v[axis+1]) + (pidAskari.pGains[axis] * SIGN(errorYawQuaternion.w) *errorYawQuaternion.v[axis+1]) - pidAskari.dGains[axis] * gyroRate;
     
     return angleRate;
 }
