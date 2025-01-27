@@ -56,7 +56,7 @@ quaternionProducts errorQuaternionP = QUATERNION_PRODUCTS_INITIALIZE;
 
 //NOTE: Integral will probably not be used
 askariGains_t pidAskari = {
-  .pGains = {300.0,300.0,300.0},
+  .pGains = {550.0,550.0,200.0},
   .dGains = {0.3,0.3,0.3} 
 };
 
