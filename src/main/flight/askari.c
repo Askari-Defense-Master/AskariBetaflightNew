@@ -36,7 +36,7 @@ enum AXIS { // roll, pitch, throttle, yaw, aux1, aux2
 int16_t askariSetpoints[3] = {0,0,0}; //This holds roll [Decidegrees],pitch [Decidegrees], and maybe yaw [Degrees/s] commands
 
 pidAskari_t pidAskari = {
-    .derivateGains = {0.2, 0.2},
+    .derivateGains = {1.0, 1.0},
     .integralGains = {0.5, 0.5}
 };
 
