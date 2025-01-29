@@ -188,7 +188,7 @@ typedef enum {
 #ifdef USE_GIMBAL
     TASK_GIMBAL,
 #endif
-
+    TASK_ASKARI_UPDATE,
     /* Count of real tasks */
     TASK_COUNT,
 

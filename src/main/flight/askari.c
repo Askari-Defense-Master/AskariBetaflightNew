@@ -23,6 +23,10 @@
 #include "rx/rx.h"
 #include "rx/msp.h"
 
+#include "io/beeper.h"
+#include "fc/rc_modes.h"
+
+#define PACKET_TIMEOUT_US 100000  // 1/10Hz =100ms in microseconds - 10Hz
 
 enum AXIS { // roll, pitch, throttle, yaw, aux1, aux2
   ROLL = 0,
@@ -34,6 +38,9 @@ enum AXIS { // roll, pitch, throttle, yaw, aux1, aux2
 };
 
 int16_t askariSetpoints[3] = {0,0,0}; //This holds roll [Decidegrees],pitch [Decidegrees], and maybe yaw [Degrees/s] commands
+
+//Setup vars for time tracking
+static timeUs_t lastValidPacketTimeUs = 0;
 
 pidAskari_t pidAskari = {
     .derivateGains = {1.0, 1.0},
@@ -64,6 +71,31 @@ static void askariMspFrameReceive(uint16_t *frame, int channelCount)
   }
 }
 
+//Function to calculate frequency and handle beeper
+static void updateAskariCommsStatus(bool packetReceived) {
+    const timeUs_t currentTimeUs = micros();
+    
+    if (packetReceived) {
+        // Update the last packet time when we receive a valid packet
+        lastValidPacketTimeUs = currentTimeUs;
+    } else {
+        // Check for timeout only when we're checking status (not receiving)
+        const timeUs_t timeSinceLastPacket = currentTimeUs - lastValidPacketTimeUs;
+        if (timeSinceLastPacket > PACKET_TIMEOUT_US) {
+            beeper(BEEPER_RX_LOST);
+        }
+    }
+}
+
+void askariUpdate(timeUs_t currentTimeUs) {
+  UNUSED(currentTimeUs);
+    //if (FLIGHT_MODE(ANGLE_MODE) && IS_RC_MODE_ACTIVE(BOXARM)) {
+    if (FLIGHT_MODE(ANGLE_MODE)) {
+      // Check status without packet received
+      updateAskariCommsStatus(false);
+    }
+}
+
 mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
                                     sbuf_t *src, sbuf_t *dst) {
   UNUSED(srcDesc);
@@ -84,6 +116,9 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
       if (FLIGHT_MODE(ANGLE_MODE))
       {
         askariMspFrameReceive(frame, channelCount);
+
+        // Check comms and buzz if necissary
+        updateAskariCommsStatus(true);
       } 
         rxMspFrameReceive(frame, channelCount); //to set aux1,aux2,throttle and yaw
     }

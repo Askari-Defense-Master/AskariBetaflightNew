@@ -4,6 +4,8 @@
 #include "msp/msp.h"
 #include <stdbool.h>
 
+#include "drivers/time.h"
+
 // 5 Inputs states, angular velocities around each axis (ROLL,PITCH,YAW), thrust
 // command and a channel for arming
 #define SUPPORTED_STATE_CHANNEL_COUNT 6
@@ -23,3 +25,4 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP, sbu
 
 float getAskariSetpointRates(int axis);
 
+void askariUpdate(timeUs_t currentTimeUs);

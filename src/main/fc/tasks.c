@@ -60,6 +60,7 @@
 #include "flight/pid.h"
 #include "flight/position.h"
 #include "flight/pos_hold.h"
+#include "flight/askari.h"
 
 #include "io/asyncfatfs/asyncfatfs.h"
 #include "io/beeper.h"
@@ -461,6 +462,8 @@ task_attribute_t task_attributes[TASK_COUNT] = {
 #ifdef USE_GIMBAL
     [TASK_GIMBAL] = DEFINE_TASK("GIMBAL", NULL, NULL, gimbalUpdate, TASK_PERIOD_HZ(100), TASK_PRIORITY_MEDIUM),
 #endif
+
+    [TASK_ASKARI_UPDATE] = DEFINE_TASK("ASKARI_UPDATE", NULL, NULL, askariUpdate, TASK_PERIOD_HZ(100), TASK_PRIORITY_LOW)
 };
 
 task_t *getTask(unsigned taskId)
@@ -648,4 +651,6 @@ void tasksInit(void)
 #ifdef USE_GIMBAL
     setTaskEnabled(TASK_GIMBAL, true);
 #endif
+
+    setTaskEnabled(TASK_ASKARI_UPDATE, true);
 }
