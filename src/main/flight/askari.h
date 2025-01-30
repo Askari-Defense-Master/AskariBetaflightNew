@@ -6,7 +6,8 @@
 
 // 5 Inputs states, angular velocities around each axis (ROLL,PITCH,YAW), thrust
 // command and a channel for arming
-#define PACKET_SIZE_BYTES 14
+#define PACKET_SIZE_BYTES_CMD 14
+#define PACKET_SIZE_BYTES_GAINS 12
 
 typedef int mspDescriptor_t;
 

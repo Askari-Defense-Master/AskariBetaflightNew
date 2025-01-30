@@ -351,6 +351,9 @@
 #define MSP_SET_BOARD_INFO       248    //in message          Sets the board information for this board
 #define MSP_SET_SIGNATURE        249    //in message          Sets the signature of the board and serial number
 
+
+#define MSP_ASKARI_GAINS     254   //in/out message          Sets the gains for the Askari controller
+
 // For Askari Betaflight
 #define MSP_ASKARI                                                             \
   255 // in message          Sets the state of the pid controller -> angular

@@ -56,8 +56,8 @@ quaternionProducts errorQuaternionP = QUATERNION_PRODUCTS_INITIALIZE;
 
 //NOTE: Integral will probably not be used
 askariGains_t pidAskari = {
-  .pGains = {550.0,550.0,200.0},
-  .dGains = {0.3,0.3,0.3} 
+  .pGains = {550.0,550.0,100.0},
+  .dGains = {0.5,0.5,0.3} 
 };
 
 static float invSqrt(float x)
@@ -97,16 +97,17 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
   UNUSED(srcDesc);
 
   const unsigned int dataSize = sbufBytesRemaining(src);
+
+  uint8_t channelCount = dataSize / sizeof(uint16_t);
+  uint16_t frame[channelCount];
   //---
   switch (cmdMSP) {
-  case MSP_ASKARI: {
+  case MSP_ASKARI:
     //Handle the RX receive
-    if (dataSize != PACKET_SIZE_BYTES) {
+    if (dataSize != PACKET_SIZE_BYTES_CMD) {
       return MSP_RESULT_ERROR;
     } 
 
-    uint8_t channelCount = dataSize / sizeof(uint16_t);
-    uint16_t frame[channelCount];
     for (int i = 0; i < channelCount; i++) {
       frame[i] = sbufReadU16(src);
     }
@@ -147,11 +148,27 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
 #else
         sbufWriteU16(dst, 0);
 #endif
-
-    // SENDING BACK MOTOR DATA
-    /*TODO:*/
     break;
-  }
+  case MSP_ASKARI_GAINS: 
+     //Handle the RX receive
+    if (dataSize != PACKET_SIZE_BYTES_GAINS) {
+      return MSP_RESULT_ERROR;
+    } 
+    pidAskari.pGains[0] = sbufReadU16(src)*10.0f;
+    pidAskari.pGains[1] = sbufReadU16(src)*10.0f;
+    pidAskari.pGains[2] = sbufReadU16(src)*10.0f;
+    pidAskari.dGains[0] = sbufReadU16(src)/10.0f;
+    pidAskari.dGains[1] = sbufReadU16(src)/10.0f;
+    pidAskari.dGains[2] = sbufReadU16(src)/10.0f;
+
+  //Sending back my gains for checking
+    sbufWriteU16(dst, lrintf(pidAskari.pGains[0]/10.0f));
+    sbufWriteU16(dst, lrintf(pidAskari.pGains[1]/10.0f));
+    sbufWriteU16(dst, lrintf(pidAskari.pGains[2]/10.0f));
+    sbufWriteU16(dst, lrintf(pidAskari.dGains[0]*10.0f));
+    sbufWriteU16(dst, lrintf(pidAskari.dGains[1]*10.0f));
+    sbufWriteU16(dst, lrintf(pidAskari.dGains[2]*10.0f));
+    break;
   default:
     return MSP_RESULT_CMD_UNKNOWN;
   }
