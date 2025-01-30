@@ -90,7 +90,7 @@ static void updateAskariCommsStatus(bool packetReceived) {
 void askariUpdate(timeUs_t currentTimeUs) {
   UNUSED(currentTimeUs);
     //if (FLIGHT_MODE(ANGLE_MODE) && IS_RC_MODE_ACTIVE(BOXARM)) {
-    if (FLIGHT_MODE(ANGLE_MODE)) {
+    if (FLIGHT_MODE(ANGLE_MODE) || IS_RC_MODE_ACTIVE(BOXMSPOVERRIDE)) {
       // Check status without packet received
       updateAskariCommsStatus(false);
     }
