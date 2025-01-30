@@ -118,9 +118,9 @@ mspResult_e mspProcessAskariCommand(mspDescriptor_t srcDesc, int16_t cmdMSP,
         askariMspFrameReceive(frame, channelCount);
 
         // Check comms and buzz if necissary
-        updateAskariCommsStatus(true);
-      } 
-        rxMspFrameReceive(frame, channelCount); //to set aux1,aux2,throttle and yaw
+      }
+      updateAskariCommsStatus(true); 
+      rxMspFrameReceive(frame, channelCount); //to set aux1,aux2,throttle and yaw
     }
 
     // SENDING BACK ATTITUDE DATA
