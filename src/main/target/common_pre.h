@@ -208,7 +208,7 @@
 #endif
 #define USE_BLACKBOX
 
-//Changed for askari cuz wasnt compiling for GPS (should be in the TARGET FLASH SIZE >1024 portion)
+//Addedd for askari
 #if !defined(USE_GPS)
 #define USE_GPS
 #endif
@@ -220,7 +220,6 @@
 #if TARGET_FLASH_SIZE >= 1024
 
 #if defined(USE_SERIALRX)
-#error "This is fucked"
 
 #define USE_SERIALRX_JETIEXBUS
 #define USE_SERIALRX_SUMD       // Graupner Hott protocol
