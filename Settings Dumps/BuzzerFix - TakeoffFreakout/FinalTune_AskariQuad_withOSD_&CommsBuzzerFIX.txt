@@ -1,0 +1,101 @@
+
+# version
+# Betaflight / STM32F7X2 (S7X2) 4.5.8 Jan 29 2025 / 17:12:09 (norevision) MSP API: 1.47
+# config rev: 5e33fe4
+
+# start the command batch
+batch start
+
+# reset configuration to default settings
+defaults nosave
+
+board_name SPEEDYBEEF7V3
+manufacturer_id SPBE
+mcu_id 004400293333510e36393332
+signature 
+
+# feature
+feature OSD
+
+# serial
+serial 1 64 115200 57600 0 115200
+serial 2 1 500000 57600 0 115200
+
+# aux
+aux 0 0 0 1300 2100 0 0
+aux 1 1 1 1300 1525 0 0
+aux 2 50 2 1300 2100 0 0
+aux 3 55 1 1600 2100 0 0
+
+# master
+set gyro_lpf1_static_hz = 150
+set gyro_lpf2_static_hz = 300
+set gyro_lpf1_dyn_min_hz = 150
+set gyro_lpf1_dyn_max_hz = 300
+set acc_calibration = -30,3,38,1
+set serialrx_provider = SBUS
+set msp_override_channels_mask = 63
+set simplified_gyro_filter_multiplier = 60
+set osd_vbat_pos = 2423
+set osd_g_force_pos = 2329
+set osd_throttle_pos = 97
+set osd_current_pos = 2390
+set osd_mah_drawn_pos = 2360
+set osd_gps_speed_pos = 2337
+set osd_gps_lon_pos = 2401
+set osd_gps_lat_pos = 2369
+set osd_altitude_pos = 2305
+set osd_pid_roll_pos = 2113
+set osd_pid_pitch_pos = 2081
+set osd_pid_yaw_pos = 2049
+set osd_warnings_pos = 12490
+set osd_pit_ang_pos = 2241
+set osd_rol_ang_pos = 2209
+set osd_esc_rpm_pos = 129
+set osd_rcchannels_pos = 2136
+set osd_displayport_device = AUTO
+set vcd_video_system = NTSC
+
+profile 0
+
+profile 1
+
+# profile 1
+set p_pitch = 35
+set i_pitch = 40
+set d_pitch = 7
+set f_pitch = 31
+set p_roll = 35
+set i_roll = 40
+set d_roll = 7
+set f_roll = 30
+set p_yaw = 30
+set i_yaw = 20
+set f_yaw = 30
+set angle_p_gain = 150
+set d_max_roll = 10
+set d_max_pitch = 10
+set d_max_yaw = 2
+set simplified_pids_mode = OFF
+
+profile 2
+
+profile 3
+
+# restore original profile selection
+profile 1
+
+rateprofile 0
+
+rateprofile 1
+
+rateprofile 2
+
+rateprofile 3
+
+# restore original rateprofile selection
+rateprofile 0
+
+# save configuration
+save
+# 
