@@ -56,8 +56,8 @@ quaternionProducts errorQuaternionP = QUATERNION_PRODUCTS_INITIALIZE;
 
 //NOTE: Integral will probably not be used
 askariGains_t pidAskari = {
-  .pGains = {550.0,550.0,100.0},
-  .dGains = {0.5,0.5,0.3} 
+  .pGains = {250.0,250.0,50.0},
+  .dGains = {0.2,0.2,0.1} 
 };
 
 static float invSqrt(float x)
@@ -200,11 +200,11 @@ static void imuQuaternionComputeProducts(quaternion_t *quat, quaternionProducts 
     quatProd->ww = quat->w * quat->w;//need
     quatProd->wx = quat->w * quat->x;//need
     quatProd->wy = quat->w * quat->y;//need
-    // quatProd->wz = quat->w * quat->z;
-    // quatProd->xx = quat->x * quat->x;
-    // quatProd->xy = quat->x * quat->y;
+    quatProd->wz = quat->w * quat->z;
+    quatProd->xx = quat->x * quat->x;
+    quatProd->xy = quat->x * quat->y;
     quatProd->xz = quat->x * quat->z;//need
-    // quatProd->yy = quat->y * quat->y;
+    quatProd->yy = quat->y * quat->y;
     quatProd->yz = quat->y * quat->z;//need
     quatProd->zz = quat->z * quat->z;//need
 }
